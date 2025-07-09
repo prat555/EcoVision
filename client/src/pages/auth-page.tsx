@@ -1,133 +1,70 @@
-import { useState, useEffect } from "react";
-import { useAuth, LoginData, RegisterData } from "@/hooks/use-auth";
+import { useState } from "react";
+import { useAuth, RegisterData } from "@/hooks/use-firebase-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Redirect, useLocation } from "wouter";
-import { Loader2, ArrowLeft, CheckCircle, User } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { Redirect } from "wouter";
+import { Loader2, User, Mail } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
 
 const loginSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-const registerSchema = loginSchema.extend({
+const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const forgotPasswordSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
 });
 
-const resetPasswordSchema = z.object({
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+type LoginData = z.infer<typeof loginSchema>;
 
 export default function AuthPage() {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showResetPassword, setShowResetPassword] = useState(false);
-  const [resetToken, setResetToken] = useState("");
-  const [resetSuccess, setResetSuccess] = useState(false);
-  const [location] = useLocation();
-  const { toast } = useToast();
-  const { user, loginMutation, registerMutation, guestLoginMutation } = useAuth();
-  
-  useEffect(() => {
-    if (location.includes('?')) {
-      const params = new URLSearchParams(location.split('?')[1]);
-      const token = params.get('token');
-      if (token) {
-        setResetToken(token);
-        setShowResetPassword(true);
-      }
-    }
-  }, [location]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { 
+    user, 
+    loginWithEmail, 
+    registerWithEmail, 
+    loginWithGoogle, 
+    resetPassword, 
+    loginAsGuest 
+  } = useAuth();
   
   const forgotPasswordForm = useForm({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
-      username: "",
+      email: "",
     },
   });
   
-  const resetPasswordForm = useForm({
-    resolver: zodResolver(resetPasswordSchema),
-    defaultValues: {
-      password: "",
-      confirmPassword: "",
-    },
-  });
-  
-  const handleForgotPassword = async (data: { username: string }) => {
+  const handleForgotPassword = async (data: { email: string }) => {
     try {
-      const response = await apiRequest("POST", "/api/forgot-password", data);
-      const result = await response.json();
-      
-      toast({
-        title: "Reset link sent",
-        description: "If an account with that username exists, a password reset link has been sent.",
-      });
-      
-      if (result.resetToken) {
-        setResetToken(result.resetToken);
-        setShowResetPassword(true);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "There was a problem sending the reset link.",
-        variant: "destructive",
-      });
-    } finally {
+      setIsLoading(true);
+      await resetPassword(data.email);
       setShowForgotPassword(false);
-    }
-  };
-  
-  const handleResetPassword = async (data: { password: string, confirmPassword: string }) => {
-    try {
-      await apiRequest("POST", "/api/reset-password", {
-        resetToken,
-        newPassword: data.password,
-      });
-      
-      toast({
-        title: "Success",
-        description: "Your password has been reset successfully.",
-      });
-      
-      setResetSuccess(true);
-      setShowResetPassword(false);
-      
-      setTimeout(() => {
-        setResetSuccess(false);
-        setTab("login");
-      }, 2000);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "There was a problem resetting your password.",
-        variant: "destructive",
-      });
+      // Error is handled in the hook
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -136,21 +73,46 @@ export default function AuthPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       name: "",
-      username: "",
+      email: "",
       password: "",
     },
   });
 
-  const onLoginSubmit = (data: LoginData) => {
-    loginMutation.mutate(data);
+  const onLoginSubmit = async (data: LoginData) => {
+    try {
+      setIsLoading(true);
+      await loginWithEmail(data.email, data.password);
+    } catch (error) {
+      // Error is handled in the hook
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onRegisterSubmit = (data: RegisterData) => {
-    registerMutation.mutate(data);
+  const onRegisterSubmit = async (data: RegisterData) => {
+    try {
+      setIsLoading(true);
+      await registerWithEmail(data.email, data.password, data.name);
+    } catch (error) {
+      // Error is handled in the hook
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      await loginWithGoogle();
+    } catch (error) {
+      // Error is handled in the hook
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGuestLogin = () => {
-    guestLoginMutation.mutate();
+    loginAsGuest();
   };
 
   if (user) {
@@ -165,7 +127,7 @@ export default function AuthPage() {
             <CardHeader>
               <CardTitle>Forgot Password</CardTitle>
               <CardDescription>
-                Enter your username and we'll send you a password reset link.
+                Enter your email and we'll send you a password reset link.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -173,12 +135,12 @@ export default function AuthPage() {
                 <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
                   <FormField
                     control={forgotPasswordForm.control}
-                    name="username"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your username" {...field} />
+                          <Input placeholder="Enter your email" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -192,121 +154,25 @@ export default function AuthPage() {
                       onClick={() => setShowForgotPassword(false)}
                       className="flex-1"
                     >
-                      <ArrowLeft className="h-4 w-4 mr-2" />
                       Back
                     </Button>
                     <Button
                       type="submit"
                       className="flex-1"
+                      disabled={isLoading}
                     >
-                      Send Reset Link
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        "Send Reset Link"
+                      )}
                     </Button>
                   </div>
                 </form>
               </Form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (showResetPassword) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reset Password</CardTitle>
-              <CardDescription>
-                Enter your new password below.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...resetPasswordForm}>
-                <form onSubmit={resetPasswordForm.handleSubmit(handleResetPassword)} className="space-y-4">
-                  <FormField
-                    control={resetPasswordForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={resetPasswordForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setShowResetPassword(false);
-                        setResetToken("");
-                      }}
-                      className="flex-1"
-                    >
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="flex-1"
-                    >
-                      Reset Password
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-  
-  if (resetSuccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
-                Password Reset Successful
-              </CardTitle>
-              <CardDescription>
-                Your password has been reset successfully.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center mb-4">You will be redirected to login shortly.</p>
-              <Button
-                onClick={() => {
-                  setResetSuccess(false);
-                  setTab("login");
-                }}
-                className="w-full"
-              >
-                Go to Login
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -338,12 +204,12 @@ export default function AuthPage() {
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
-                        name="username"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter your username" {...field} />
+                              <Input type="email" placeholder="Enter your email" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -367,15 +233,49 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full" 
-                        disabled={loginMutation.isPending}
+                        disabled={isLoading}
                       >
-                        {loginMutation.isPending ? (
+                        {isLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Logging in...
                           </>
                         ) : (
-                          "Login"
+                          <>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Login with Email
+                          </>
+                        )}
+                      </Button>
+                      
+                      <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-background px-2 text-muted-foreground">
+                            Or continue with
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleGoogleLogin}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Signing in...
+                          </>
+                        ) : (
+                          <>
+                            <FcGoogle className="h-4 w-4 mr-2" />
+                            Continue with Google
+                          </>
                         )}
                       </Button>
                                             
@@ -384,19 +284,10 @@ export default function AuthPage() {
                         variant="outline"
                         className="w-full"
                         onClick={handleGuestLogin}
-                        disabled={guestLoginMutation.isPending}
+                        disabled={isLoading}
                       >
-                        {guestLoginMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Starting session...
-                          </>
-                        ) : (
-                          <>
-                            <User className="h-4 w-4 mr-2" />
-                            Continue as Guest
-                          </>
-                        )}
+                        <User className="h-4 w-4 mr-2" />
+                        Continue as Guest
                       </Button>
                       
                       <div className="text-center mt-2">
@@ -454,12 +345,12 @@ export default function AuthPage() {
                       
                       <FormField
                         control={registerForm.control}
-                        name="username"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="Choose a username" {...field} />
+                              <Input type="email" placeholder="Enter your email" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -483,15 +374,18 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full" 
-                        disabled={registerMutation.isPending}
+                        disabled={isLoading}
                       >
-                        {registerMutation.isPending ? (
+                        {isLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Creating account...
                           </>
                         ) : (
-                          "Sign Up"
+                          <>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Sign Up with Email
+                          </>
                         )}
                       </Button>
                       
@@ -510,20 +404,31 @@ export default function AuthPage() {
                         type="button"
                         variant="outline"
                         className="w-full"
-                        onClick={handleGuestLogin}
-                        disabled={guestLoginMutation.isPending}
+                        onClick={handleGoogleLogin}
+                        disabled={isLoading}
                       >
-                        {guestLoginMutation.isPending ? (
+                        {isLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Starting session...
+                            Signing in...
                           </>
                         ) : (
                           <>
-                            <User className="h-4 w-4 mr-2" />
-                            Continue as Guest
+                            <FcGoogle className="h-4 w-4 mr-2" />
+                            Continue with Google
                           </>
                         )}
+                      </Button>
+                      
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleGuestLogin}
+                        disabled={isLoading}
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Continue as Guest
                       </Button>
                     </form>
                   </Form>

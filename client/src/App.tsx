@@ -10,7 +10,7 @@ import About from "@/pages/About";
 import Guide from "@/pages/Guide";
 import Contact from "@/pages/Contact";
 import AuthPage from "@/pages/auth-page";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-firebase-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 
 function Router() {

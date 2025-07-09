@@ -22,7 +22,7 @@ export default function Stats({ itemsAnalyzed, accuracy, wasteAverted }: StatsPr
     {
       icon: <Beaker className="h-8 w-8 text-primary" />,
       value: wasteAverted,
-      label: "Waste diverted from landfills"
+      label: "Waste items diverted from landfills"
     }
   ];
 

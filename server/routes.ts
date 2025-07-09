@@ -1,10 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { analyzeWasteImage, getChatResponse } from "./openai";
-import { insertAnalysisSchema, insertChatMessageSchema } from "@shared/schema";
+import { storage } from "./simple-storage";
+import { analyzeWasteImage, getChatResponse } from "./deepseek";
 import { z } from "zod";
-import { setupAuth } from "./auth";
+import { setupAuth } from "./firebase-auth";
 
 const wasteImageSchema = z.object({
   imageData: z.string().min(1)
@@ -34,7 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Strip the prefix from the base64 string if present
       const base64Image = imageData.replace(/^data:image\/\w+;base64,/, "");
       
-      // Call OpenAI for analysis
+      // Call DeepSeek R1 for analysis
       const analysisResult = await analyzeWasteImage(base64Image);
       
       // Store the analysis result
@@ -73,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { message } = validation.data;
       
-      // Call OpenAI for chat response
+      // Call DeepSeek R1 for chat response
       const response = await getChatResponse(message);
       
       // Store the chat message and response

@@ -10,13 +10,15 @@ import {
   MenuIcon, 
   X, 
   User as UserIcon,
-  LogOut 
+  LogOut,
+  Sun,
+  Moon 
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import EcoVisionLogo from "@/icons/EcoVisionLogo";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-firebase-auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +33,7 @@ export default function Header() {
   const [location] = useLocation();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -68,16 +70,21 @@ export default function Header() {
             ))}
           </div>
           
-          {/* Dark Mode Toggle - to the right of nav links */}
+          {/* Dark Mode Toggle - with sun/moon icons */}
           <div className="flex items-center mr-4">
-            <Switch 
-              id="darkModeToggle" 
-              checked={isDarkMode} 
-              onCheckedChange={toggleDarkMode}
-            />
-            <Label htmlFor="darkModeToggle" className="ml-2 hidden sm:block">
-              Dark Mode
-            </Label>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDarkMode}
+              className="hover:bg-transparent"
+            >
+              {isDarkMode ? (
+                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+              ) : (
+                <Moon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+              )}
+              <span className="sr-only">Toggle theme</span>
+            </Button>
           </div>
           
           {/* Login/User Profile - rightmost element */}
@@ -104,8 +111,7 @@ export default function Header() {
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
-                    onClick={() => logoutMutation.mutate()}
-                    disabled={logoutMutation.isPending}
+                    onClick={() => logout()}
                     className="text-red-500 cursor-pointer"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -140,6 +146,24 @@ export default function Header() {
                   </Link>
                 ))}
                 
+                {/* Mobile theme toggle */}
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Theme</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleDarkMode}
+                    className="hover:bg-transparent"
+                  >
+                    {isDarkMode ? (
+                      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+                    ) : (
+                      <Moon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+                    )}
+                    <span className="sr-only">Toggle theme</span>
+                  </Button>
+                </div>
+                
                 {/* Mobile auth buttons */}
                 {!user ? (
                   <Link 
@@ -156,10 +180,9 @@ export default function Header() {
                     variant="outline" 
                     className="flex items-center justify-center gap-2 text-red-500 w-full"
                     onClick={() => {
-                      logoutMutation.mutate();
+                      logout();
                       setIsOpen(false);
                     }}
-                    disabled={logoutMutation.isPending}
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>

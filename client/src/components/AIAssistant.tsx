@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,13 +23,7 @@ export default function AIAssistant() {
     }
   ]);
   const [inputValue, setInputValue] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  // Scroll to bottom of messages when new ones are added
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
@@ -75,10 +69,11 @@ export default function AIAssistant() {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent default form submission behavior
       handleSendMessage();
     }
   };
-
+  
   return (
     <section className="bg-white dark:bg-neutral-800 rounded-xl shadow-md overflow-hidden mb-12 max-w-4xl mx-auto transition-colors">
       <CardHeader className="bg-primary px-6 py-4">
@@ -88,12 +83,12 @@ export default function AIAssistant() {
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="p-6 h-96 flex flex-col">
-        <div className="flex-grow overflow-y-auto mb-4 chat-scrollbar">
+      <CardContent className="p-6 h-[500px] flex flex-col">
+        <div className="flex-grow overflow-y-auto mb-4 chat-scrollbar space-y-4">
           {messages.map((message) => (
             <div 
               key={message.id} 
-              className={`flex items-start mb-4 ${message.isUser ? 'justify-end' : ''}`}
+              className={`flex items-start ${message.isUser ? 'justify-end' : ''}`}
             >
               {!message.isUser && (
                 <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center mr-3 flex-shrink-0">
@@ -101,12 +96,14 @@ export default function AIAssistant() {
                 </div>
               )}
               
-              <div className={`rounded-lg p-3 max-w-[75%] ${
+              <div className={`rounded-lg p-4 max-w-[80%] ${
                 message.isUser 
                   ? 'bg-primary bg-opacity-10' 
                   : 'bg-neutral-100 dark:bg-neutral-700'
               }`}>
-                <p className="whitespace-pre-wrap">{message.content}</p>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                  {message.content}
+                </p>
               </div>
               
               {message.isUser && (
@@ -118,10 +115,9 @@ export default function AIAssistant() {
               )}
             </div>
           ))}
-          <div ref={messagesEndRef} />
         </div>
         
-        <div className="relative">
+        <div className="relative mt-4">
           <Input
             type="text"
             placeholder="Ask about waste disposal or sustainable practices..."

@@ -5,7 +5,7 @@ A smart, AI-powered web platform designed to help users identify, recycle, and r
 ## ✨ Features
 
 - 🔐 **User Authentication**  
-  - Sign up and login functionality using PostgreSQL for secure data storage.
+  - Sign up and login functionality using Firebase Authentication with email/password and Google sign-in.
 
 - 📷 **Smart Waste Scanner**  
   - Upload an image or use your camera to scan a waste item.
@@ -17,7 +17,7 @@ A smart, AI-powered web platform designed to help users identify, recycle, and r
   - Based on the classification, the user receives instructions on how to recycle or reuse the item.
 
 - 🤖 **AI-Powered Chatbot**  
-  - Get assistance on waste disposal, recycling tips, and eco-friendly practices via a chatbot powered by OpenAI.
+  - Get assistance on waste disposal, recycling tips, and eco-friendly practices via a chatbot powered by DeepSeek R1.
 
 - 🌙 **Dark and Light Theme Support**
 
@@ -31,16 +31,16 @@ A smart, AI-powered web platform designed to help users identify, recycle, and r
 | Layer     | Technology                    |
 |-----------|-------------------------------|
 | Frontend  | React (Vite) + Tailwind CSS   |
-| Backend   | Node.js / Express (if applicable) |
-| Database  | PostgreSQL                    |
-| AI/ML     | OpenAI API for image analysis and chatbot |
-| Auth      | Custom auth using PostgreSQL  |
+| Backend   | Node.js / Express             |
+| Database  | Firebase (Authentication)     |
+| AI/ML     | DeepSeek R1 via OpenRouter for image analysis and chatbot |
+| Auth      | Firebase Authentication       |
 
 ## 🚀 How It Works
 
 1. **Login or Sign up** to access the platform.
 2. **Upload or scan an item** using the camera or file picker.
-3. The item is analyzed via an **OpenAI-based ML model**.
+3. The item is analyzed via **DeepSeek R1 AI model**.
 4. You'll receive:
    - Waste category (e.g., Recyclable)
    - Disposal or reuse instructions
