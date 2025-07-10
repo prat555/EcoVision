@@ -10,10 +10,10 @@ A smart, AI-powered web platform designed to help users identify, recycle, and r
 - 📷 **Smart Waste Scanner**  
   - Upload an image or use your camera to scan a waste item.
   - The system classifies the waste into one of four categories:
-    - ♻️ Recyclable
-    - 🌱 Compostable
-    - ⚠️ Special (e.g., e-waste, hazardous)
-    - 🚯 Landfill
+    - Recyclable
+    - Compostable
+    - Special (e.g., e-waste, hazardous)
+    - Landfill
   - Based on the classification, the user receives instructions on how to recycle or reuse the item.
 
 - 🤖 **AI-Powered Chatbot**  
