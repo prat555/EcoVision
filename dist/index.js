@@ -1,9 +1,3 @@
-var __defProp = Object.defineProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-
 // server/index.ts
 import "dotenv/config";
 import express2 from "express";
@@ -11,157 +5,32 @@ import express2 from "express";
 // server/routes.ts
 import { createServer } from "http";
 
-// shared/schema.ts
-var schema_exports = {};
-__export(schema_exports, {
-  analyses: () => analyses,
-  chatMessages: () => chatMessages,
-  guestUserSchema: () => guestUserSchema,
-  insertAnalysisSchema: () => insertAnalysisSchema,
-  insertChatMessageSchema: () => insertChatMessageSchema,
-  insertUserSchema: () => insertUserSchema,
-  users: () => users
-});
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
-var users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: text("name"),
-  username: text("username").notNull().unique(),
-  email: text("email"),
-  password: text("password"),
-  // Removed .notNull() to allow null for guest users
-  resetToken: text("reset_token"),
-  resetTokenExpiry: timestamp("reset_token_expiry"),
-  isGuest: boolean("is_guest").default(false).notNull(),
-  // Added guest flag
-  guestId: text("guest_id").unique(),
-  // Added for guest user tracking
-  createdAt: timestamp("created_at").defaultNow().notNull()
-});
-var insertUserSchema = createInsertSchema(users, {
-  username: z.string().min(3),
-  password: z.string().min(6).optional()
-}).omit({
-  id: true,
-  resetToken: true,
-  resetTokenExpiry: true,
-  createdAt: true
-});
-var analyses = pgTable("analyses", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  // Changed to allow null for guests
-  imageData: text("image_data").notNull(),
-  result: text("result").notNull(),
-  category: text("category").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
-});
-var insertAnalysisSchema = createInsertSchema(analyses).pick({
-  userId: true,
-  imageData: true,
-  result: true,
-  category: true
-});
-var chatMessages = pgTable("chat_messages", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  // Changed to allow null for guests
-  guestId: text("guest_id"),
-  // Added for guest user tracking
-  message: text("message").notNull(),
-  response: text("response").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
-});
-var insertChatMessageSchema = createInsertSchema(chatMessages).pick({
-  userId: true,
-  guestId: true,
-  message: true,
-  response: true
-});
-var guestUserSchema = z.object({
-  id: z.number().optional(),
-  username: z.string(),
-  name: z.string().optional(),
-  isGuest: z.literal(true),
-  guestId: z.string(),
-  createdAt: z.string().optional()
-});
-
-// server/db.ts
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import ws from "ws";
-neonConfig.webSocketConstructor = ws;
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?"
-  );
-}
-var pool = new Pool({ connectionString: process.env.DATABASE_URL });
-var db = drizzle({ client: pool, schema: schema_exports });
-
-// server/storage.ts
-import { eq, desc, count, sql } from "drizzle-orm";
-var DatabaseStorage = class {
-  // User methods
-  async getUser(id) {
-    const results = await db.select().from(users).where(eq(users.id, id));
-    return results[0];
+// server/simple-storage.ts
+var SimpleStorage = class {
+  analyses = [];
+  chatMessages = [];
+  nextAnalysisId = 1;
+  nextChatId = 1;
+  async createAnalysis(analysis) {
+    const newAnalysis = {
+      ...analysis,
+      id: this.nextAnalysisId++,
+      createdAt: /* @__PURE__ */ new Date()
+    };
+    this.analyses.push(newAnalysis);
+    return newAnalysis;
   }
-  async getUserByUsername(username) {
-    const results = await db.select().from(users).where(eq(users.username, username));
-    return results[0];
+  async createChatMessage(chatMessage) {
+    const newChatMessage = {
+      ...chatMessage,
+      id: this.nextChatId++,
+      createdAt: /* @__PURE__ */ new Date()
+    };
+    this.chatMessages.push(newChatMessage);
+    return newChatMessage;
   }
-  async getUserByResetToken(resetToken) {
-    const results = await db.select().from(users).where(eq(users.resetToken, resetToken));
-    return results[0];
-  }
-  async createUser(insertUser) {
-    const result = await db.insert(users).values(insertUser).returning();
-    return result[0];
-  }
-  async updateUserResetToken(userId, resetToken, resetTokenExpiry) {
-    const result = await db.update(users).set({
-      resetToken,
-      resetTokenExpiry
-    }).where(eq(users.id, userId)).returning();
-    return result[0];
-  }
-  async updateUserPassword(userId, newPassword) {
-    const result = await db.update(users).set({
-      password: newPassword,
-      resetToken: null,
-      resetTokenExpiry: null
-    }).where(eq(users.id, userId)).returning();
-    return result[0];
-  }
-  // Analysis methods
-  async getAnalysis(id) {
-    const results = await db.select().from(analyses).where(eq(analyses.id, id));
-    return results[0];
-  }
-  async createAnalysis(insertAnalysis) {
-    const result = await db.insert(analyses).values(insertAnalysis).returning();
-    return result[0];
-  }
-  // Chat message methods
-  async getChatMessage(id) {
-    const results = await db.select().from(chatMessages).where(eq(chatMessages.id, id));
-    return results[0];
-  }
-  async getChatMessagesByUserId(userId) {
-    return db.select().from(chatMessages).where(userId === null ? sql`${chatMessages.userId} IS NULL` : eq(chatMessages.userId, userId)).orderBy(desc(chatMessages.createdAt));
-  }
-  async createChatMessage(insertChatMessage) {
-    const result = await db.insert(chatMessages).values(insertChatMessage).returning();
-    return result[0];
-  }
-  // Stats methods
   async getStats() {
-    const result = await db.select({ count: count() }).from(analyses);
-    const analysesCount = result[0].count;
+    const analysesCount = this.analyses.length;
     return {
       itemsAnalyzed: analysesCount,
       accuracy: "89%",
@@ -169,19 +38,32 @@ var DatabaseStorage = class {
     };
   }
 };
-var storage = new DatabaseStorage();
+var storage = new SimpleStorage();
 
-// server/openai.ts
+// server/deepseek.ts
 import OpenAI from "openai";
-var openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
+var openai = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY || "",
+  baseURL: "https://openrouter.ai/api/v1",
+  defaultHeaders: {
+    "HTTP-Referer": "https://ecovision-app.com",
+    // Optional: your app URL
+    "X-Title": "EcoVision"
+    // Optional: your app name
+  }
+});
+if (!process.env.OPENROUTER_API_KEY) {
+  console.error("\u26A0\uFE0F  OPENROUTER_API_KEY environment variable is not set!");
+  console.error("Please add your OpenRouter API key to the .env file");
+}
 async function analyzeWasteImage(base64Image) {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "deepseek/deepseek-r1",
       messages: [
         {
           role: "system",
-          content: "You are an expert in waste management and recycling. Analyze the provided image and identify waste items. Classify the waste as one of: recyclable, compostable, special (requires special disposal), or landfill. Provide detailed disposal instructions and environmental impact information. Respond with JSON in this format: { category: string, itemName: string, disposalInstructions: string[], environmentalImpact: string }"
+          content: 'You are an expert in waste management and recycling. Analyze the provided image and identify waste items. Classify the waste as one of: recyclable, compostable, special (requires special disposal), or landfill. Provide detailed disposal instructions and environmental impact information. Respond with JSON in this exact format: { "category": "recyclable|compostable|special|landfill", "itemName": "string", "disposalInstructions": ["string1", "string2"], "environmentalImpact": "string" }'
         },
         {
           role: "user",
@@ -199,201 +81,125 @@ async function analyzeWasteImage(base64Image) {
           ]
         }
       ],
-      response_format: { type: "json_object" },
-      max_tokens: 800
+      max_tokens: 800,
+      temperature: 0.1
+      // Lower temperature for more consistent responses
     });
-    const result = JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No response content received");
+    }
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (parseError) {
+      console.warn("Failed to parse JSON, attempting text extraction:", content);
+      result = extractWasteInfoFromText(content);
+    }
+    if (!result.category || !result.itemName || !result.disposalInstructions || !result.environmentalImpact) {
+      throw new Error("Invalid response structure from AI");
+    }
     return {
       category: result.category,
       itemName: result.itemName,
-      disposalInstructions: result.disposalInstructions,
+      disposalInstructions: Array.isArray(result.disposalInstructions) ? result.disposalInstructions : [result.disposalInstructions],
       environmentalImpact: result.environmentalImpact
     };
   } catch (error) {
     console.error("Error analyzing waste image:", error);
-    throw new Error(`Failed to analyze waste image: ${error instanceof Error ? error.message : String(error)}`);
+    return {
+      category: "landfill",
+      itemName: "Unknown Item",
+      disposalInstructions: ["Please consult your local waste management guidelines for proper disposal."],
+      environmentalImpact: "Unable to determine environmental impact. Please dispose of responsibly."
+    };
+  }
+}
+function extractWasteInfoFromText(text) {
+  const defaultResult = {
+    category: "landfill",
+    itemName: "Unknown Item",
+    disposalInstructions: ["Please consult your local waste management guidelines."],
+    environmentalImpact: "Environmental impact assessment unavailable."
+  };
+  try {
+    const categoryMatch = text.match(/category[\":\s]*[\"']?(recyclable|compostable|special|landfill)[\"']?/i);
+    if (categoryMatch) {
+      defaultResult.category = categoryMatch[1].toLowerCase();
+    }
+    const itemMatch = text.match(/item[Nn]ame[\":\s]*[\"']?([^\"'\n,]+)[\"']?/i);
+    if (itemMatch) {
+      defaultResult.itemName = itemMatch[1].trim();
+    }
+    const impactMatch = text.match(/environmental[Ii]mpact[\":\s]*[\"']?([^\"'\n]+)[\"']?/i);
+    if (impactMatch) {
+      defaultResult.environmentalImpact = impactMatch[1].trim();
+    }
+    return defaultResult;
+  } catch (error) {
+    return defaultResult;
   }
 }
 async function getChatResponse(message) {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "deepseek/deepseek-r1",
       messages: [
         {
           role: "system",
-          content: "You are EcoBot, an AI sustainability assistant specialized in waste management and environmental topics. Provide helpful, educational responses about proper waste disposal, recycling, sustainability practices, and environmental impact. Keep responses informative but concise (under 150 words). Always be encouraging and positive about sustainable practices."
+          content: "You are EcoBot, an AI sustainability assistant specialized in waste management and environmental topics. Provide helpful, educational responses about proper waste disposal, recycling, sustainability practices, and environmental impact. Keep responses informative but concise (under 150 words). Always be encouraging and positive about sustainable practices. Focus on practical advice and actionable steps users can take."
         },
         {
           role: "user",
           content: message
         }
       ],
-      max_tokens: 300
+      max_tokens: 300,
+      temperature: 0.7
+      // Slightly higher temperature for more natural conversation
     });
     return response.choices[0].message.content || "I'm sorry, I couldn't generate a response. Please try again.";
   } catch (error) {
     console.error("Error getting chat response:", error);
-    throw new Error(`Failed to get chat response: ${error instanceof Error ? error.message : String(error)}`);
+    return "I'm experiencing some technical difficulties right now. Please try asking your question again, or consult your local environmental guidelines for waste management advice.";
   }
 }
 
 // server/routes.ts
-import { z as z2 } from "zod";
+import { z } from "zod";
 
-// server/auth.ts
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
-import { v4 as uuidv4 } from "uuid";
-import pgSession from "connect-pg-simple";
-var scryptAsync = promisify(scrypt);
-async function hashPassword(password) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = await scryptAsync(password, salt, 64);
-  return `${buf.toString("hex")}.${salt}`;
-}
-async function comparePasswords(supplied, stored) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = await scryptAsync(supplied, salt, 64);
-  return timingSafeEqual(hashedBuf, suppliedBuf);
-}
+// server/firebase-auth.ts
 function setupAuth(app2) {
-  const PostgresSessionStore = pgSession(session);
-  const sessionSettings = {
-    secret: process.env.SESSION_SECRET || "ecovision-secret-key",
-    resave: false,
-    saveUninitialized: false,
-    store: new PostgresSessionStore({
-      pool,
-      createTableIfMissing: true
-    }),
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 30 * 24 * 60 * 60 * 1e3
-      // 30 days
-    }
-  };
-  app2.set("trust proxy", 1);
-  app2.use(session(sessionSettings));
-  app2.use(passport.initialize());
-  app2.use(passport.session());
-  passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await storage.getUserByUsername(username);
-        if (!user || !await comparePasswords(password, user.password)) {
-          return done(null, false);
-        } else {
-          return done(null, user);
-        }
-      } catch (err) {
-        return done(err);
-      }
-    })
-  );
-  passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser(async (id, done) => {
+  app2.post("/api/guest", async (req, res) => {
     try {
-      const user = await storage.getUser(id);
-      done(null, user || void 0);
+      const guestUser = {
+        id: `guest-${Date.now()}`,
+        username: req.body.username || `guest-${Date.now()}`,
+        name: req.body.name || "Guest User",
+        email: null,
+        isGuest: true,
+        guestId: req.body.guestId,
+        createdAt: (/* @__PURE__ */ new Date()).toISOString()
+      };
+      res.status(201).json(guestUser);
     } catch (err) {
-      done(err);
+      res.status(500).json({ message: "Failed to create guest user" });
     }
-  });
-  app2.post("/api/register", async (req, res, next) => {
-    try {
-      const existingUser = await storage.getUserByUsername(req.body.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
-      const user = await storage.createUser({
-        ...req.body,
-        password: await hashPassword(req.body.password)
-      });
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
-      });
-    } catch (err) {
-      next(err);
-    }
-  });
-  app2.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json({ message: "Invalid username or password" });
-      req.login(user, (err2) => {
-        if (err2) return next(err2);
-        res.status(200).json(user);
-      });
-    })(req, res, next);
-  });
-  app2.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
-      if (err) return next(err);
-      res.sendStatus(200);
-    });
   });
   app2.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    res.status(401).json({ message: "Authentication handled by Firebase" });
   });
-  app2.post("/api/forgot-password", async (req, res, next) => {
-    try {
-      const { username } = req.body;
-      if (!username) {
-        return res.status(400).json({ message: "Username is required" });
-      }
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
-        return res.status(200).json({ message: "If an account with that username exists, a password reset link has been sent." });
-      }
-      const resetToken = uuidv4();
-      const resetTokenExpiry = new Date(Date.now() + 1e3 * 60 * 60);
-      await storage.updateUserResetToken(user.id, resetToken, resetTokenExpiry);
-      console.log(`Reset token for ${username}: ${resetToken}`);
-      return res.status(200).json({
-        message: "If an account with that username exists, a password reset link has been sent.",
-        // In a real app, we would NOT include this, but for demo purposes:
-        resetToken,
-        resetTokenExpiry
-      });
-    } catch (err) {
-      next(err);
-    }
-  });
-  app2.post("/api/reset-password", async (req, res, next) => {
-    try {
-      const { resetToken, newPassword } = req.body;
-      if (!resetToken || !newPassword) {
-        return res.status(400).json({ message: "Reset token and new password are required" });
-      }
-      const user = await storage.getUserByResetToken(resetToken);
-      if (!user || !user.resetTokenExpiry) {
-        return res.status(400).json({ message: "Invalid or expired reset token" });
-      }
-      const now = /* @__PURE__ */ new Date();
-      if (now > user.resetTokenExpiry) {
-        return res.status(400).json({ message: "Reset token has expired" });
-      }
-      const hashedPassword = await hashPassword(newPassword);
-      await storage.updateUserPassword(user.id, hashedPassword);
-      return res.status(200).json({ message: "Password has been reset successfully" });
-    } catch (err) {
-      next(err);
-    }
+  app2.post("/api/logout", (req, res) => {
+    res.sendStatus(200);
   });
 }
 
 // server/routes.ts
-var wasteImageSchema = z2.object({
-  imageData: z2.string().min(1)
+var wasteImageSchema = z.object({
+  imageData: z.string().min(1)
 });
-var chatMessageSchema = z2.object({
-  message: z2.string().min(1)
+var chatMessageSchema = z.object({
+  message: z.string().min(1)
 });
 async function registerRoutes(app2) {
   setupAuth(app2);
@@ -497,7 +303,6 @@ var vite_config_default = defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets")
     }
   },
