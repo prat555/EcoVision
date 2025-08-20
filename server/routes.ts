@@ -20,29 +20,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/analyze-waste", async (req, res) => {
     try {
       const validation = wasteImageSchema.safeParse(req.body);
-      
       if (!validation.success) {
         return res.status(400).json({ 
           message: "Invalid request data",
           errors: validation.error.format()
         });
       }
-      
       const { imageData } = validation.data;
-      
+      // Optional: allow provider selection via ?provider=huggingface or body.provider
+      const provider = (req.query.provider || req.body.provider || 'deepseek') as 'deepseek' | 'huggingface';
       // Strip the prefix from the base64 string if present
       const base64Image = imageData.replace(/^data:image\/\w+;base64,/, "");
-      
-      // Call DeepSeek R1 for analysis
-      const analysisResult = await analyzeWasteImage(base64Image);
-      
+      // Call selected provider for analysis
+      const analysisResult = await analyzeWasteImage(base64Image, provider);
       // Store the analysis result
       const analysis = await storage.createAnalysis({
         imageData: base64Image,
         result: JSON.stringify(analysisResult),
         category: analysisResult.category
       });
-      
       return res.status(200).json({
         id: analysis.id,
         category: analysisResult.category,
