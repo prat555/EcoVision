@@ -1,7 +1,7 @@
 
-# ♻️ Smart Waste Management Website
+# ♻️ EcoVision - Smart Waste Management Platform
 
-A smart, AI-powered web platform designed to help users identify, recycle, and responsibly dispose of waste items. Users can scan items using a camera or upload an image, and our machine learning model classifies the waste and provides eco-friendly disposal or reuse suggestions.
+A smart, AI-powered web platform designed to help users identify, recycle, and responsibly dispose of waste items. Users can scan items using a camera or upload an image, and our AI model provides accurate waste classification with eco-friendly disposal suggestions.
 
 ## ✨ Features
 
@@ -10,15 +10,17 @@ A smart, AI-powered web platform designed to help users identify, recycle, and r
 
 - 📷 **Smart Waste Scanner**  
   - Upload an image or use your camera to scan a waste item.
+  - Powered by **Google Gemini 2.0 Flash** for fast and accurate classification.
   - The system classifies the waste into one of four categories:
-    - Recyclable
-    - Compostable
-    - Special (e.g., e-waste, hazardous)
-    - Landfill
-  - Based on the classification, the user receives instructions on how to recycle or reuse the item.
+    - **Recyclable** - Items that can be recycled
+    - **Compostable** - Organic waste that can be composted
+    - **Special** - Items requiring special disposal (e-waste, batteries, chemicals)
+    - **Landfill** - Items that must go to landfill
+  - Provides detailed disposal instructions and environmental impact information.
 
 - 🤖 **AI-Powered Chatbot**  
-  - Get assistance on waste disposal, recycling tips, and eco-friendly practices via a chatbot powered by DeepSeek R1.
+  - Get instant assistance on waste disposal, recycling tips, and eco-friendly practices.
+  - Powered by **Google Gemini** for fast, intelligent responses.
 
 - 🌙 **Dark and Light Theme Support**
 
@@ -31,47 +33,148 @@ A smart, AI-powered web platform designed to help users identify, recycle, and r
 
 | Layer     | Technology                    |
 |-----------|-------------------------------|
-| Frontend  | React (Vite) + Tailwind CSS   |
-| Backend   | Node.js / Express             |
-| Database  | Firebase (Authentication)     |
-| AI/ML     | DeepSeek R1 via OpenRouter, Hugging Face API, or local Python model for image analysis; DeepSeek R1 for chatbot |
+| Frontend  | React (Vite) + Tailwind CSS + ShadCN UI |
+| Backend   | Node.js / Express + TypeScript |
+| Database  | Firebase (Authentication & Storage) |
+| AI/ML     | Google Gemini 2.0 Flash (Vision + Chat) |
 | Auth      | Firebase Authentication       |
 
-## 🚀 How It Works
+## 🚀 Quick Start
 
-1. **Login or Sign up** to access the platform.
-2. **Upload or scan an item** using the camera or file picker.
-3. The item is analyzed via one of:
-  - **DeepSeek R1 AI model** (default)
-  - **Hugging Face API** (e.g., amariayudha/RealWaste_Prediction_Deep_Learning)
-  - **Local Python model** using [watersplash/waste-classification](https://huggingface.co/watersplash/waste-classification) with the `transformers` library
-## 🧑‍💻 Local Python Waste Classification (Optional)
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- Google Gemini API key
 
-You can use a local Hugging Face model for image classification:
+### Installation
 
-1. Install Python dependencies:
-  ```bash
-  pip install transformers torch pillow
-  ```
-2. Use the provided script:
-  ```bash
-  python server/waste_classifier.py <image_path>
-  ```
-  This uses the `watersplash/waste-classification` model from Hugging Face.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/prat555/EcoVision.git
+   cd EcoVision
+   ```
 
-You can integrate this script with the Node.js backend to automate classification. (See `server/waste_classifier.py` for details.)
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   
+   Create a `.env` file in the root directory:
+   ```bash
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+   
+   Get your Gemini API key from: [Google AI Studio](https://aistudio.google.com/app/apikey)
+
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Open your browser**
+   
+   Navigate to `http://localhost:5000`
+
 ## 🔑 Environment Variables
 
 Add the following to your `.env` file:
 
-```
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-HF_API_TOKEN=your_huggingface_api_token_here
+```env
+# Required: Google Gemini API Key
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Optional: Firebase Configuration (if using authentication)
+FIREBASE_API_KEY=your_firebase_api_key
+FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+FIREBASE_APP_ID=your_app_id
 ```
 
-`OPENROUTER_API_KEY` is required for DeepSeek R1. `HF_API_TOKEN` is required for Hugging Face API-based image classification.
-4. You'll receive:
-   - Waste category (e.g., Recyclable)
-   - Disposal or reuse instructions
+## 💡 How It Works
+
+1. **Sign up or Login** to access the platform.
+2. **Upload or scan a waste item** using the camera or file picker.
+3. **Get instant AI analysis** powered by Google Gemini 2.0 Flash:
+   - Accurate waste category identification
+   - Detailed disposal instructions
    - Environmental impact information
-5. **Use the chatbot** to ask any questions about waste management.
+4. **Chat with the AI assistant** for personalized waste management advice.
+
+## 🎯 Key Benefits
+
+- ⚡ **Fast Response Times** - Gemini 2.0 Flash provides near-instant results
+- 🎯 **High Accuracy** - Superior image recognition compared to traditional ML models
+- 💰 **Cost Effective** - Generous free tier (15 req/min, 1,500/day)
+- 🌍 **Eco-Friendly** - Helps users make informed decisions about waste disposal
+- 📱 **Mobile Friendly** - Responsive design works on all devices
+
+## 📁 Project Structure
+
+```
+EcoVision/
+├── client/                 # React frontend
+│   ├── src/
+│   │   ├── components/    # UI components
+│   │   ├── pages/         # Page components
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── lib/           # Utilities and configs
+│   │   └── App.tsx        # Main app component
+│   └── index.html
+├── server/                # Express backend
+│   ├── gemini.ts         # Gemini AI integration
+│   ├── routes.ts         # API routes
+│   ├── firebase-auth.ts  # Firebase authentication
+│   ├── simple-storage.ts # Data storage
+│   └── index.ts          # Server entry point
+├── package.json
+└── README.md
+```
+
+## 🔧 Available Scripts
+
+```bash
+# Development mode with hot reload
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Type checking
+npm run check
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🙏 Acknowledgments
+
+- [Google Gemini](https://ai.google.dev/) for the powerful AI capabilities
+- [Firebase](https://firebase.google.com/) for authentication and storage
+- [ShadCN UI](https://ui.shadcn.com/) for beautiful UI components
+- [React](https://react.dev/) and [Vite](https://vitejs.dev/) for the frontend framework
+
+## 📧 Contact
+
+For questions or support, please open an issue on GitHub.
+
+---
+
+Made with ♻️ for a sustainable future

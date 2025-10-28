@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -18,7 +18,7 @@ export default function AIAssistant() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
-      content: "👋 Hello! I'm EcoBot, your AI sustainability assistant. Ask me anything about waste disposal, recycling, or sustainable practices!",
+      content: "👋 Hello! I'm EcoBot, your AI sustainability assistant powered by Google Gemini. Ask me anything about waste disposal, recycling, or sustainable practices!",
       isUser: false
     }
   ]);
@@ -69,74 +69,97 @@ export default function AIAssistant() {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      e.preventDefault(); // Prevent default form submission behavior
+      e.preventDefault();
+      e.stopPropagation();
       handleSendMessage();
+      return false;
     }
   };
   
   return (
-    <section className="bg-white dark:bg-neutral-800 rounded-xl shadow-md overflow-hidden mb-12 max-w-4xl mx-auto transition-colors">
-      <CardHeader className="bg-primary px-6 py-4">
-        <CardTitle className="text-xl font-heading font-semibold text-white flex items-center">
-          <ChatBot className="h-5 w-5 mr-2" />
-          EcoBot - AI Sustainability Assistant
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="p-6 h-[500px] flex flex-col">
-        <div className="flex-grow overflow-y-auto mb-4 chat-scrollbar space-y-4">
-          {messages.map((message) => (
-            <div 
-              key={message.id} 
-              className={`flex items-start ${message.isUser ? 'justify-end' : ''}`}
-            >
-              {!message.isUser && (
-                <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center mr-3 flex-shrink-0">
-                  <ChatBot className="h-5 w-5" />
-                </div>
-              )}
-              
-              <div className={`rounded-lg p-4 max-w-[80%] ${
-                message.isUser 
-                  ? 'bg-primary bg-opacity-10' 
-                  : 'bg-neutral-100 dark:bg-neutral-700'
-              }`}>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {message.content}
-                </p>
-              </div>
-              
-              {message.isUser && (
-                <div className="w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-600 text-white flex items-center justify-center ml-3 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+    <section className="mb-16 max-w-4xl mx-auto">
+      {/* Section Header */}
+      <div className="text-center mb-6">
+        <h3 className="text-3xl font-heading font-bold mb-3 flex items-center justify-center gap-2">
+          <Sparkles className="h-7 w-7 text-primary" />
+          EcoBot - AI Assistant
+        </h3>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Get instant answers about waste management, recycling tips, and sustainable practices
+        </p>
+      </div>
+
+      <div className="rounded-xl shadow-lg overflow-hidden border-2 backdrop-blur-sm bg-card/80">
+        <CardHeader className="bg-gradient-to-r from-primary to-green-600 px-6 py-5">
+          <CardTitle className="text-xl font-heading font-semibold text-white flex items-center gap-2">
+            <ChatBot className="h-6 w-6" />
+            EcoBot Assistant
+          </CardTitle>
+        </CardHeader>
         
-        <div className="relative mt-4">
-          <Input
-            type="text"
-            placeholder="Ask about waste disposal or sustainable practices..."
-            className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg py-3 px-4 pr-12 focus:outline-none focus:border-primary dark:bg-neutral-700"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={chatMutation.isPending}
-          />
-          <Button
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-secondary transition-colors p-1 h-auto"
-            variant="ghost"
-            onClick={handleSendMessage}
-            disabled={chatMutation.isPending || !inputValue.trim()}
-          >
-            <Send className="h-6 w-6" />
-          </Button>
-        </div>
-      </CardContent>
+        <CardContent className="p-0 h-[500px] flex flex-col">
+          {/* Messages Area */}
+          <div className="flex-grow overflow-y-auto px-6 py-4 space-y-4">
+            {messages.map((message) => (
+              <div 
+                key={message.id} 
+                className={`flex items-start gap-3 ${message.isUser ? 'justify-end' : ''}`}
+              >
+                {!message.isUser && (
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-green-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+                    <ChatBot className="h-5 w-5" />
+                  </div>
+                )}
+                
+                <div className={`rounded-2xl px-5 py-3 max-w-[80%] shadow-sm ${
+                  message.isUser 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-card border'
+                }`}>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {message.content}
+                  </p>
+                </div>
+                
+                {message.isUser && (
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {/* Input Area */}
+          <div className="border-t-2 p-4 bg-card/50 backdrop-blur-sm">
+            <div className="relative max-w-4xl mx-auto">
+              <Input
+                type="text"
+                placeholder="Ask about waste disposal or sustainable practices..."
+                className="w-full rounded-xl py-6 px-5 pr-14 text-sm border-2 border-border focus:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 shadow-sm"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={chatMutation.isPending}
+              />
+              <Button
+                type="button"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-green-700 text-white rounded-lg shadow-md h-10 w-10 p-0"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSendMessage();
+                }}
+                disabled={chatMutation.isPending || !inputValue.trim()}
+              >
+                {chatMutation.isPending ? '...' : <Send className="h-5 w-5" />}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </div>
     </section>
   );
 }

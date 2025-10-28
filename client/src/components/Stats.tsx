@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { PenTool, Heart, Beaker } from "lucide-react";
+import { Recycle, CheckCircle2, Trash2 } from "lucide-react";
 
 interface StatsProps {
   itemsAnalyzed: string | number;
@@ -10,17 +10,17 @@ interface StatsProps {
 export default function Stats({ itemsAnalyzed, accuracy, wasteAverted }: StatsProps) {
   const stats = [
     {
-      icon: <PenTool className="h-8 w-8 text-primary" />,
+      icon: <Recycle className="h-8 w-8 text-primary" strokeWidth={2} />,
       value: itemsAnalyzed,
       label: "Waste items analyzed by our AI"
     },
     {
-      icon: <Heart className="h-8 w-8 text-primary" />,
+      icon: <CheckCircle2 className="h-8 w-8 text-primary" strokeWidth={2} />,
       value: accuracy,
       label: "Accuracy in waste classification"
     },
     {
-      icon: <Beaker className="h-8 w-8 text-primary" />,
+      icon: <Trash2 className="h-8 w-8 text-primary" strokeWidth={2} />,
       value: wasteAverted,
       label: "Waste items diverted from landfills"
     }
@@ -34,7 +34,7 @@ export default function Stats({ itemsAnalyzed, accuracy, wasteAverted }: StatsPr
         {stats.map((stat, index) => (
           <Card key={index} className="transition-colors">
             <CardContent className="p-6 text-center">
-              <div className="w-16 h-16 mx-auto bg-primary bg-opacity-10 rounded-full flex items-center justify-center mb-4">
+              <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-4 shrink-0">
                 {stat.icon}
               </div>
               <h4 className="text-xl font-heading font-medium mb-2">{stat.value}</h4>

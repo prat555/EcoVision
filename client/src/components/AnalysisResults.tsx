@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, Leaf, Trash2, Zap, Trees, Droplets, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface AnalysisResultProps {
   isLoading: boolean;
@@ -13,6 +14,27 @@ interface AnalysisResultProps {
 }
 
 export default function AnalysisResults({ isLoading, result }: AnalysisResultProps) {
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'recyclable':
+        return <motion.div
+          initial={{ rotate: 0 }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 0.5 }}
+        >
+          <CheckCircle2 className="h-5 w-5" />
+        </motion.div>;
+      case 'compostable':
+        return <Leaf className="h-5 w-5" />;
+      case 'special':
+        return <Zap className="h-5 w-5" />;
+      case 'landfill':
+        return <Trash2 className="h-5 w-5" />;
+      default:
+        return null;
+    }
+  };
+
   const getCategoryStyles = (category: string) => {
     switch (category) {
       case 'recyclable':
@@ -54,23 +76,71 @@ export default function AnalysisResults({ isLoading, result }: AnalysisResultPro
   };
 
   const renderEmptyState = () => (
-    <div className="flex-grow flex flex-col items-center justify-center p-6 text-center">
-      <AlertCircle className="h-16 w-16 text-neutral-300 dark:text-neutral-600 mb-4" />
-      <h5 className="text-lg font-medium mb-2">No Analysis Yet</h5>
-      <p className="text-neutral-600 dark:text-neutral-400 text-sm">
-        Upload an image of waste items to receive AI-powered disposal recommendations
+    <motion.div 
+      className="flex-grow flex flex-col items-center justify-center p-8 text-center"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div
+        animate={{ 
+          scale: [1, 1.05, 1],
+          rotate: [0, 5, -5, 0] 
+        }}
+        transition={{ 
+          duration: 2,
+          repeat: Infinity,
+          repeatDelay: 1 
+        }}
+      >
+        <AlertCircle className="h-20 w-20 text-muted-foreground/30 mb-4" />
+      </motion.div>
+      <h5 className="text-lg font-semibold mb-2">No Analysis Yet</h5>
+      <p className="text-muted-foreground text-sm max-w-xs">
+        Upload or capture an image of waste items to receive AI-powered disposal recommendations
       </p>
-    </div>
+    </motion.div>
   );
 
   const renderLoadingState = () => (
-    <div className="flex-grow flex flex-col items-center justify-center p-6">
-      <Loader2 className="h-16 w-16 text-primary animate-spin mb-4" />
-      <p className="text-lg font-medium">Analyzing your waste...</p>
-      <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 text-center">
+    <motion.div 
+      className="flex-grow flex flex-col items-center justify-center p-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+      >
+        <Loader2 className="h-16 w-16 text-primary mb-4" />
+      </motion.div>
+      <p className="text-lg font-semibold mb-2">Analyzing your waste...</p>
+      <p className="text-sm text-muted-foreground text-center max-w-xs">
         Our AI is identifying the items and determining the best disposal methods
       </p>
-    </div>
+      <motion.div 
+        className="mt-4 flex gap-1"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-2 h-2 bg-primary rounded-full"
+            animate={{ 
+              scale: [1, 1.5, 1],
+              opacity: [0.5, 1, 0.5]
+            }}
+            transition={{ 
+              duration: 1,
+              repeat: Infinity,
+              delay: i * 0.2
+            }}
+          />
+        ))}
+      </motion.div>
+    </motion.div>
   );
 
   const renderResults = () => {
@@ -79,50 +149,144 @@ export default function AnalysisResults({ isLoading, result }: AnalysisResultPro
     const styles = getCategoryStyles(result.category);
     
     return (
-      <div className="flex-grow overflow-y-auto p-4">
-        <div className={cn("result-item mb-4 border rounded-lg overflow-hidden", styles.border)}>
-          <div className={cn("px-4 py-2 border-b flex justify-between items-center", styles.border, styles.bg, styles.bgOpacity)}>
-            <div className="flex items-center">
-              <span className={cn("w-3 h-3 rounded-full mr-2", styles.bg)}></span>
-              <h5 className="font-medium">{result.itemName}</h5>
+      <motion.div 
+        className="flex-grow overflow-y-auto p-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <motion.div 
+          className={cn("mb-4 border-2 rounded-xl overflow-hidden shadow-md", styles.border)}
+          initial={{ scale: 0.95 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        >
+          {/* Category Header */}
+          <div className={cn("px-5 py-4 border-b-2 flex justify-between items-center", styles.border, styles.bg, styles.bgOpacity)}>
+            <div className="flex items-center gap-3">
+              <motion.div
+                className={cn("flex items-center justify-center", styles.text)}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              >
+                {getCategoryIcon(result.category)}
+              </motion.div>
+              <h5 className="font-semibold text-lg">{result.itemName}</h5>
             </div>
-            <span className={cn("text-sm font-medium", styles.text)}>
+            <motion.span 
+              className={cn("text-sm font-bold px-3 py-1 rounded-full", styles.bg, "text-white")}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
               {result.category.charAt(0).toUpperCase() + result.category.slice(1)}
-            </span>
+            </motion.span>
           </div>
-          <div className="p-4">
-            <p className="mb-3 text-sm">
-              {result.category === 'recyclable' && "This item can be recycled in most curbside recycling programs."}
-              {result.category === 'compostable' && "This item can be composted to create nutrient-rich soil."}
-              {result.category === 'special' && "This item requires special handling and cannot go in regular trash or recycling."}
-              {result.category === 'landfill' && "This item cannot be recycled or composted and should be placed in general waste."}
-            </p>
-            <div className="text-sm">
-              <p className="font-medium mb-1">Disposal Instructions:</p>
-              <ul className="list-disc list-inside space-y-1 text-neutral-700 dark:text-neutral-300">
+
+          {/* Content */}
+          <div className="p-5 bg-card">
+            <motion.p 
+              className="mb-4 text-sm leading-relaxed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              {result.category === 'recyclable' && "♻️ This item can be recycled in most curbside recycling programs."}
+              {result.category === 'compostable' && "🌱 This item can be composted to create nutrient-rich soil."}
+              {result.category === 'special' && "⚠️ This item requires special handling and cannot go in regular trash or recycling."}
+              {result.category === 'landfill' && "🗑️ This item cannot be recycled or composted and should be placed in general waste."}
+            </motion.p>
+
+            {/* Disposal Instructions */}
+            <motion.div 
+              className="bg-muted/50 rounded-lg p-4 mb-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <p className="font-semibold mb-2 text-sm flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                Disposal Instructions:
+              </p>
+              <ul className="space-y-2">
                 {result.disposalInstructions.map((instruction, i) => (
-                  <li key={i}>{instruction}</li>
+                  <motion.li 
+                    key={i}
+                    className="flex items-start gap-2 text-sm"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 + (i * 0.1) }}
+                  >
+                    <span className={cn("mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0", styles.bg)} />
+                    <span>{instruction}</span>
+                  </motion.li>
                 ))}
               </ul>
-            </div>
-            <div className="mt-3 text-xs text-neutral-500">
-              <p>Environmental Impact: {result.environmentalImpact}</p>
-            </div>
+            </motion.div>
+
+            {/* Environmental Impact */}
+            <motion.div 
+              className="bg-primary/5 border border-primary/20 rounded-lg p-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+            >
+              <p className="font-semibold text-sm mb-2 text-primary flex items-center gap-2">
+                <Leaf className="h-4 w-4" />
+                Environmental Impact
+              </p>
+              <div className="flex items-start gap-2">
+                <div className="flex gap-1 mt-1">
+                  <motion.div
+                    className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0"
+                    animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 0 }}
+                  >
+                    <Leaf className="w-5 h-5 text-primary shrink-0" strokeWidth={2} />
+                  </motion.div>
+                  <motion.div
+                    className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0"
+                    animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
+                  >
+                    <Trees className="w-5 h-5 text-primary shrink-0" strokeWidth={2} />
+                  </motion.div>
+                  <motion.div
+                    className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0"
+                    animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
+                  >
+                    <Droplets className="w-5 h-5 text-primary shrink-0" strokeWidth={2} />
+                  </motion.div>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed flex-1">
+                  {result.environmentalImpact}
+                </p>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   };
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden border border-neutral-200 dark:border-neutral-700">
-      <CardHeader className="bg-neutral-100 dark:bg-neutral-700 px-4 py-3 border-b border-neutral-200 dark:border-neutral-600">
-        <h4 className="font-heading font-medium">Analysis Results</h4>
+    <Card className="flex flex-col h-full min-h-[500px] overflow-hidden border-2 shadow-lg backdrop-blur-sm bg-card/80">
+      <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-4 border-b-2 backdrop-blur-sm">
+        <h4 className="font-heading font-semibold text-lg">Analysis Results</h4>
       </CardHeader>
       
       <CardContent className="p-0 flex-grow">
-        {isLoading ? renderLoadingState() : 
-          result ? renderResults() : renderEmptyState()}
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div key="loading">{renderLoadingState()}</motion.div>
+          ) : result ? (
+            <motion.div key="results">{renderResults()}</motion.div>
+          ) : (
+            <motion.div key="empty">{renderEmptyState()}</motion.div>
+          )}
+        </AnimatePresence>
       </CardContent>
     </Card>
   );

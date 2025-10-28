@@ -104,7 +104,9 @@ export default function Header() {
                         {user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden sm:inline">{user.name ?? user.username}</span>
+                    <span className="hidden sm:inline">
+                      {user.name ? user.name.split(' ')[0] : user.username}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

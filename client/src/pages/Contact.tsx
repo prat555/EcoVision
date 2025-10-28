@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPinIcon, MailIcon, PhoneIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
@@ -36,6 +36,10 @@ const formSchema = z.object({
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -72,8 +76,8 @@ export default function Contact() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <Card>
             <CardContent className="pt-6 flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-primary bg-opacity-10 rounded-full flex items-center justify-center mb-4">
-                <MapPinIcon className="h-6 w-6 text-primary" />
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 shrink-0">
+                <MapPinIcon className="h-7 w-7 text-primary shrink-0" strokeWidth={2} />
               </div>
               <CardTitle className="text-lg mb-2">Our Location</CardTitle>
               <CardDescription>123 Green Street<br />Eco City, EC 12345<br />United States</CardDescription>
@@ -82,8 +86,8 @@ export default function Contact() {
           
           <Card>
             <CardContent className="pt-6 flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-primary bg-opacity-10 rounded-full flex items-center justify-center mb-4">
-                <MailIcon className="h-6 w-6 text-primary" />
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 shrink-0">
+                <MailIcon className="h-7 w-7 text-primary shrink-0" strokeWidth={2} />
               </div>
               <CardTitle className="text-lg mb-2">Email Us</CardTitle>
               <CardDescription>info@ecovision.com<br />support@ecovision.com</CardDescription>
@@ -92,8 +96,8 @@ export default function Contact() {
           
           <Card>
             <CardContent className="pt-6 flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-primary bg-opacity-10 rounded-full flex items-center justify-center mb-4">
-                <PhoneIcon className="h-6 w-6 text-primary" />
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 shrink-0">
+                <PhoneIcon className="h-7 w-7 text-primary shrink-0" strokeWidth={2} />
               </div>
               <CardTitle className="text-lg mb-2">Call Us</CardTitle>
               <CardDescription>(555) 123-4567<br />Mon-Fri, 9AM-5PM</CardDescription>

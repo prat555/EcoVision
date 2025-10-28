@@ -181,27 +181,90 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left side - Forms */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <Tabs value={tab} onValueChange={(value) => setTab(value as "login" | "register")}>
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Sign Up</TabsTrigger>
-            </TabsList>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Background with gradient overlay - matching home page */}
+      <div className="fixed inset-0 -z-10">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url("https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2013&auto=format&fit=crop")',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/90 to-background/95" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5" />
+      </div>
+
+      {/* Main Container */}
+      <div className="w-full max-w-6xl mx-auto px-4 relative z-10">
+        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+          
+          {/* Left Side - Branding */}
+          <div className="w-full md:w-1/2 text-center md:text-left">
+            <div className="inline-flex items-center justify-center md:justify-start gap-3 mb-6">
+              <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary to-green-600 flex items-center justify-center shadow-xl">
+                <svg className="h-11 w-11 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <h1 className="text-5xl md:text-6xl font-heading font-bold mb-4 bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">
+              EcoVision
+            </h1>
+            <p className="text-xl md:text-2xl text-muted-foreground mb-6">
+              AI-powered sustainable waste management
+            </p>
+            <p className="text-base md:text-lg text-muted-foreground/80 max-w-md mx-auto md:mx-0">
+              Join thousands of eco-conscious users making a positive impact on our planet through intelligent waste classification and disposal guidance.
+            </p>
             
-            <TabsContent value="login">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Login to your account</CardTitle>
-                  <CardDescription>
-                    Enter your credentials to access your EcoVision account
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+            {/* Features */}
+            <div className="mt-8 space-y-3 hidden md:block">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-xl">🌱</span>
+                </div>
+                <span className="text-muted-foreground">Instant AI-powered identification</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-xl">♻️</span>
+                </div>
+                <span className="text-muted-foreground">Smart disposal guidelines</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-xl">💬</span>
+                </div>
+                <span className="text-muted-foreground">24/7 EcoBot assistance</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Auth Card */}
+          <div className="w-full md:w-1/2 max-w-md">
+            <Card className="border-2 border-primary/20 shadow-2xl backdrop-blur-md bg-card/90 overflow-hidden">
+              <Tabs value={tab} onValueChange={(value) => setTab(value as "login" | "register")}>
+                <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1.5 rounded-none h-14">
+                  <TabsTrigger 
+                    value="login" 
+                    className="font-semibold text-base data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
+                  >
+                    Login
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="register" 
+                    className="font-semibold text-base data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
+                  >
+                    Sign Up
+                  </TabsTrigger>
+                </TabsList>
+            
+            <TabsContent value="login" className="mt-0">
+              <CardContent className="p-6">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
                         name="email"
@@ -303,32 +366,24 @@ export default function AuthPage() {
                     </form>
                   </Form>
                 </CardContent>
-                <CardFooter className="flex justify-center">
-                  <p className="text-sm text-gray-500">
+                <CardFooter className="flex justify-center border-t pt-4">
+                  <p className="text-sm text-muted-foreground">
                     Don't have an account?{" "}
                     <Button 
                       variant="link" 
-                      className="p-0" 
+                      className="p-0 text-primary font-semibold" 
                       onClick={() => setTab("register")}
                     >
                       Sign up
                     </Button>
                   </p>
                 </CardFooter>
-              </Card>
             </TabsContent>
             
-            <TabsContent value="register">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create an account</CardTitle>
-                  <CardDescription>
-                    Join EcoVision and start your sustainability journey
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+            <TabsContent value="register" className="mt-0">
+              <CardContent className="p-6">
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                       <FormField
                         control={registerForm.control}
                         name="name"
@@ -433,50 +488,22 @@ export default function AuthPage() {
                     </form>
                   </Form>
                 </CardContent>
-                <CardFooter className="flex justify-center">
-                  <p className="text-sm text-gray-500">
+                <CardFooter className="flex justify-center border-t pt-4">
+                  <p className="text-sm text-muted-foreground">
                     Already have an account?{" "}
                     <Button 
                       variant="link" 
-                      className="p-0" 
+                      className="p-0 text-primary font-semibold" 
                       onClick={() => setTab("login")}
                     >
                       Login
                     </Button>
                   </p>
                 </CardFooter>
-              </Card>
             </TabsContent>
           </Tabs>
-        </div>
-      </div>
-      
-      {/* Right side - Hero section */}
-      <div className="hidden md:flex md:w-1/2 bg-primary flex-col justify-center items-center p-10 text-white">
-        <div className="max-w-md">
-          <h1 className="text-4xl font-bold mb-4">Welcome to EcoVision</h1>
-          <h2 className="text-2xl font-medium mb-6">Your AI-powered guide to sustainable waste management</h2>
-          
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-medium mb-2">🌱 Identify Waste Items</h3>
-              <p>Upload photos of waste items and get instant AI-powered identification and disposal recommendations.</p>
-            </div>
-            
-            <div>
-              <h3 className="text-xl font-medium mb-2">♻️ Get Disposal Guidelines</h3>
-              <p>Learn the proper way to recycle, compost, or dispose of your waste items to minimize environmental impact.</p>
-            </div>
-            
-            <div>
-              <h3 className="text-xl font-medium mb-2">💬 Chat with EcoAssistant</h3>
-              <p>Ask our AI assistant about any sustainability topic or get clarification on disposal methods.</p>
-            </div>
+        </Card>
           </div>
-          
-          <p className="mt-8 italic">
-            Join thousands of eco-conscious users making a positive impact on our planet.
-          </p>
         </div>
       </div>
     </div>

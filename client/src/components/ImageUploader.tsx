@@ -1,12 +1,13 @@
 import { useState, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Camera, ImageIcon, X } from "lucide-react";
+import { Camera, ImageIcon, X, Upload, Sparkles } from "lucide-react";
 import Webcam from 'react-webcam';
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from '@/hooks/use-toast';
 import AnalysisResults from './AnalysisResults';
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ImageUploader() {
   const [imageData, setImageData] = useState<string | null>(null);
@@ -153,109 +154,185 @@ export default function ImageUploader() {
   };
 
   return (
-    <section id="upload-section" className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-6 mb-10 max-w-4xl mx-auto transition-colors">
-      <h3 className="text-2xl font-heading font-semibold mb-4 text-center">Analyze Your Waste</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="flex flex-col items-center justify-center">
-          {!showCamera ? (
-            <div
-              ref={dropAreaRef}
-              className="w-full h-64 border-2 border-dashed border-neutral-200 dark:border-neutral-600 rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors relative overflow-hidden"
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={imageData ? undefined : triggerFileInput}
-            >
-              {!imageData ? (
-                <div className="text-center p-6">
-                  <ImageIcon className="h-12 w-12 mx-auto text-neutral-400 mb-4" />
-                  <p className="mb-2">Drag & drop an image here</p>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">or</p>
-                  <Button 
-                    variant="link" 
-                    className="mt-2 text-primary hover:text-green-900 p-0"
-                    onClick={triggerFileInput}
-                  >
-                    Browse files
-                  </Button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                  />
-                </div>
-              ) : (
-                <div className="absolute inset-0">
-                  <img className="w-full h-full object-contain" src={imageData} alt="Preview" />
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    className="absolute top-2 right-2 bg-white dark:bg-neutral-700 rounded-full shadow-md"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeImage();
-                    }}
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="w-full h-64 relative">
-              <Webcam
-                audio={false}
-                ref={webcamRef}
-                screenshotFormat="image/jpeg"
-                className="w-full h-full object-cover rounded-lg"
-              />
-              <Button
-                size="icon"
-                variant="secondary"
-                className="absolute top-2 right-2 bg-white dark:bg-neutral-700 rounded-full shadow-md"
-                onClick={closeCamera}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-          )}
+    <section id="upload-section" className="mb-16 max-w-6xl mx-auto">
+      {/* Section Header */}
+      <div className="text-center mb-8">
+        <h3 className="text-3xl font-heading font-bold mb-3 flex items-center justify-center gap-2">
+          <Sparkles className="h-7 w-7 text-primary" />
+          Analyze Your Waste
+        </h3>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Upload an image or use your camera to get instant AI-powered waste classification and disposal recommendations
+        </p>
+      </div>
 
-          <div className="mt-4 w-full">
-            <div className="flex items-center justify-center space-x-2">
-              {showCamera ? (
-                <Button
-                  className="bg-primary hover:bg-green-900 text-white"
-                  onClick={captureImage}
-                >
-                  Capture Photo
-                </Button>
-              ) : (
-                <Button
-                  className="bg-primary hover:bg-green-900 text-white"
-                  onClick={openCamera}
-                >
-                  <Camera className="h-5 w-5 mr-2" />
-                  Take Picture
-                </Button>
-              )}
-              <Button
-                className="bg-primary hover:bg-green-900 text-white font-medium"
-                onClick={analyzeImage}
-                disabled={!imageData || isPending}
-              >
-                {isPending ? 'Analyzing...' : 'Analyze Waste'}
-              </Button>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Upload Section */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card className="border-2 shadow-lg hover:shadow-xl transition-shadow duration-300 backdrop-blur-sm bg-card/80">
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center">
+                {!showCamera ? (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={imageData ? "preview" : "upload"}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      ref={dropAreaRef}
+                      className="w-full h-80 border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-300 relative overflow-hidden bg-muted/30"
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={imageData ? undefined : triggerFileInput}
+                    >
+                      {!imageData ? (
+                        <div className="text-center p-8">
+                          <motion.div
+                            initial={{ scale: 1 }}
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Upload className="h-16 w-16 mx-auto text-muted-foreground/40 mb-4" />
+                          </motion.div>
+                          <p className="text-lg font-medium mb-2">Drop your image here</p>
+                          <p className="text-sm text-muted-foreground mb-4">or</p>
+                          <Button 
+                            variant="secondary"
+                            size="lg"
+                            className="font-medium"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              triggerFileInput();
+                            }}
+                          >
+                            <ImageIcon className="h-5 w-5 mr-2" />
+                            Browse Files
+                          </Button>
+                          <p className="text-xs text-muted-foreground mt-4">
+                            Supports JPG, PNG, WebP
+                          </p>
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                          />
+                        </div>
+                      ) : (
+                        <div className="absolute inset-0 group">
+                          <img className="w-full h-full object-contain" src={imageData} alt="Preview" />
+                          {/* Subtle X button */}
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            className="absolute top-4 right-4 bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground rounded-full shadow-lg backdrop-blur-sm z-10 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeImage();
+                            }}
+                          >
+                            <X className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+                ) : (
+                  <motion.div 
+                    className="w-full h-80 relative rounded-xl overflow-hidden"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <Webcam
+                      audio={false}
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="absolute top-4 right-4 bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground rounded-full shadow-lg backdrop-blur-sm transition-colors"
+                      onClick={closeCamera}
+                    >
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </motion.div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="mt-6 w-full flex flex-col gap-3">
+                  {showCamera ? (
+                    <Button
+                      size="lg"
+                      className="w-full bg-primary hover:bg-green-700 text-white font-medium"
+                      onClick={captureImage}
+                    >
+                      <Camera className="h-5 w-5 mr-2" />
+                      Capture Photo
+                    </Button>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="font-medium"
+                        onClick={openCamera}
+                      >
+                        <Camera className="h-5 w-5 mr-2" />
+                        Camera
+                      </Button>
+                      <Button
+                        size="lg"
+                        className="bg-primary hover:bg-green-700 text-white font-medium shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                        onClick={analyzeImage}
+                        disabled={!imageData || isPending}
+                      >
+                        {isPending ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="mr-2"
+                            >
+                              <Sparkles className="h-5 w-5" />
+                            </motion.div>
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-5 w-5 mr-2" />
+                            Analyze
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
         
-        <AnalysisResults 
-          isLoading={isPending}
-          result={analysisResult}
-        />
+        {/* Results Section */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="lg:sticky lg:top-4 h-fit"
+        >
+          <AnalysisResults 
+            isLoading={isPending}
+            result={analysisResult}
+          />
+        </motion.div>
       </div>
     </section>
   );

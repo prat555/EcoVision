@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./simple-storage";
-import { analyzeWasteImage, getChatResponse } from "./deepseek";
+import { analyzeWasteImage, getChatResponse } from "./gemini";
 import { z } from "zod";
 import { setupAuth } from "./firebase-auth";
 
@@ -27,12 +27,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       const { imageData } = validation.data;
-      // Optional: allow provider selection via ?provider=huggingface or body.provider
-      const provider = (req.query.provider || req.body.provider || 'deepseek') as 'deepseek' | 'huggingface';
+      
       // Strip the prefix from the base64 string if present
       const base64Image = imageData.replace(/^data:image\/\w+;base64,/, "");
-      // Call selected provider for analysis
-      const analysisResult = await analyzeWasteImage(base64Image, provider);
+      
+      // Use Gemini for fast and accurate analysis
+      const analysisResult = await analyzeWasteImage(base64Image);
       // Store the analysis result
       const analysis = await storage.createAnalysis({
         imageData: base64Image,
@@ -68,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { message } = validation.data;
       
-      // Call DeepSeek R1 for chat response
+      // Use Gemini for fast chat responses
       const response = await getChatResponse(message);
       
       // Store the chat message and response

@@ -6,8 +6,13 @@ import {
   AlertTriangleIcon, 
   TrashIcon 
 } from "lucide-react";
+import { useEffect } from "react";
 
 export default function Guide() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-4xl mx-auto">
