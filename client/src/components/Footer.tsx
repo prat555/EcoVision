@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Facebook, Twitter, Instagram, Leaf, ArrowUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import EcoVisionLogo from "@/icons/EcoVisionLogo";
@@ -11,6 +11,17 @@ export default function Footer() {
   const [email, setEmail] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { toast } = useToast();
+
+  // Track scroll position to show/hide button
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show button when scrolled down more than 300px
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,17 +47,15 @@ export default function Footer() {
   return (
     <>
       {/* Scroll to Top Button */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={scrollToTop}
-        className="fixed bottom-6 right-6 z-50 bg-primary hover:bg-green-700 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all"
-        aria-label="Scroll to top"
-      >
-        <ArrowUp className="h-5 w-5" />
-      </motion.button>
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 bg-primary hover:bg-green-700 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-colors"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+      )}
 
       <footer className="bg-gradient-to-b from-neutral-900 to-black text-white pt-16 pb-8 relative overflow-hidden">
         {/* Background decoration */}
